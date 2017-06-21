@@ -1,11 +1,59 @@
 var list;
 var Note = React.createClass({
+  edit: function(){
+    this.setState({
+      onEdit: true
+    });
+  },
+  cancel: function(){
+    this.setState({
+      onEdit: false
+    });
+  },
+  save: function(){
+    var item = this;
+    $.post("/update", {note: this.props.id, info: this.refs.txt.value }, function(data) {
+      list.setState({
+        arr: data
+      });
+      item.setState({
+        onEdit: false
+      });
+    });
+  },
+
+  getInitialState: function(){
+    return {
+      onEdit: false,
+    }
+  },
+
+  delete: function(){
+    $.post("/delete",{note: this.props.id}, function(data){
+      list.setState({
+        arr: data,
+      })
+    });
+  },
   render: function(){
-    return(
-      <div className="note">
-        {this.props.children}
-      </div>
-    );
+    if (this.state.onEdit) {
+      return(
+        <div className="note">
+        <input defaultValue={this.props.children} ref="txt" />
+        <button onClick={this.save}>Save</button>
+        <button onClick={this.cancel}>Cancel</button>
+        </div>
+      );
+
+    } else {
+      return(
+        <div className="note">
+        <p>{this.props.children}</p>
+        <button onClick={this.delete}>Delete</button>
+        <button onClick={this.edit}>Edit</button>
+        </div>
+      );
+    }
   }
 });
 function addNote(){
@@ -29,7 +77,7 @@ var List = React.createClass({
         <button onClick={addNote}>Add</button>
         {
           this.state.arr.map(function(note, index){
-            return <Note key={index}>{note}</Note>
+            return <Note key={index} id={index}>{note}</Note>
           })
         }
       </div>
@@ -48,9 +96,14 @@ var List = React.createClass({
 
 var InputNote = React.createClass({
   send: function(){
-    list.setState({
-      arr: list.state.arr.concat(this.refs.txt.value)
-    });
+    // list.setState({
+    //   arr: list.state.arr.concat(this.refs.txt.value)
+    // });
+    $.post("/add", {note: this.refs.txt.value},function(data) {
+      list.setState({
+        arr: data
+      });
+    })
     ReactDOM.unmountComponentAtNode(document.getElementById("id-add"));
   },
   render: function(){
